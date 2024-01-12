@@ -7,34 +7,34 @@
 
     # creates the tables needed for Akka Persistence
     # as well as the offset store table for Akka Projection
-    docker exec -i shopping-cart-service_postgres-db_1 psql -U shopping-cart -t < ddl-scripts/create_tables.sql
+    docker exec -i shopping-cart-service-postgres-db-1 psql -U shopping-cart -t < ddl-scripts/create_tables.sql
     
     # creates the user defined projection table.
-    docker exec -i shopping-cart-service_postgres-db_1 psql -U shopping-cart -t < ddl-scripts/create_user_tables.sql
+    docker exec -i shopping-cart-service-postgres-db-1 psql -U shopping-cart -t < ddl-scripts/create_user_tables.sql
     ```
 
 2. Make sure you have compiled the project
 
     ```shell
-    mvn compile 
+    ./mvnw compile 
     ```
 
 3. Start a first node:
 
     ```shell
-    mvn compile exec:exec -DAPP_CONFIG=local1.conf
+    ./mvnw compile exec:exec -DAPP_CONFIG=local1.conf
     ```
 
 4. (Optional) Start another node with different ports:
 
     ```shell
-    mvn compile exec:exec -DAPP_CONFIG=local2.conf
+    ./mvnw compile exec:exec -DAPP_CONFIG=local2.conf
     ```
 
 5. (Optional) More can be started:
 
     ```shell
-    mvn compile exec:exec -DAPP_CONFIG=local3.conf
+    ./mvnw compile exec:exec -DAPP_CONFIG=local3.conf
     ```
 
 6. Check for service readiness
