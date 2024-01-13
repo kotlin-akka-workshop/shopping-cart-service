@@ -7,6 +7,8 @@ services:
     environment:
       POSTGRES_USER: shopping-cart
       POSTGRES_PASSWORD: shopping-cart
+    volumes:
+      - ./ddl-scripts:/docker-entrypoint-initdb.d/
 
   # this second PostgresSQL is used when running test
   postgres-db-test:
@@ -43,11 +45,4 @@ services:
       - zookeeper
       - kafka
     volumes:
-      - ./kafka-1-logs:/tmp/kafka-logs
-
-  wait-for-kafka:
-    image: waisbrot/wait
-    links:
-      - kafka
-    environment:
-      - TARGETS=kafka:9092
+      - ./ddl-scripts:/docker-entrypoint-initdb.d/
