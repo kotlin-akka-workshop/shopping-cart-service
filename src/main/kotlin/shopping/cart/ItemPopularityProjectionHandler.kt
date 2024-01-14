@@ -13,7 +13,7 @@ internal class ItemPopularityProjectionHandler(private val tag: String, private 
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
     private fun findOrNew(itemId: String): ItemPopularity {
-        return repo.findById(itemId).orElseGet {
+        return repo.findById(itemId)!!.orElseGet {
             ItemPopularity(
                 itemId,
                 0L,
