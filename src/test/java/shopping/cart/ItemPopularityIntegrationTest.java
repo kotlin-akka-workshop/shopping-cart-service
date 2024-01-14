@@ -71,15 +71,15 @@ public class ItemPopularityIntegrationTest {
     final String item1 = "item1";
     final String item2 = "item2";
 
-    EntityRef<ShoppingCart.Command> cart1 = sharding.entityRefFor(ShoppingCart.ENTITY_KEY, cartId1);
-    EntityRef<ShoppingCart.Command> cart2 = sharding.entityRefFor(ShoppingCart.ENTITY_KEY, cartId2);
+    EntityRef<ShoppingCart.Command> cart1 = sharding.entityRefFor(ShoppingCart.getEntityKey(), cartId1);
+    EntityRef<ShoppingCart.Command> cart2 = sharding.entityRefFor(ShoppingCart.getEntityKey(), cartId2);
 
     final Duration timeout = Duration.ofSeconds(3);
 
     CompletionStage<ShoppingCart.Summary> reply1 =
         cart1.askWithStatus(replyTo -> new ShoppingCart.AddItem(item1, 3, replyTo), timeout);
     ShoppingCart.Summary summary1 = reply1.toCompletableFuture().get(3, SECONDS);
-    assertEquals(3, summary1.items.get(item1).intValue());
+    assertEquals(3, summary1.getItems().get(item1).intValue());
 
     TestProbe<Object> probe = testKit.createTestProbe();
     probe.awaitAssert(
@@ -93,14 +93,14 @@ public class ItemPopularityIntegrationTest {
     CompletionStage<ShoppingCart.Summary> reply2 =
         cart1.askWithStatus(replyTo -> new ShoppingCart.AddItem(item2, 5, replyTo), timeout);
     ShoppingCart.Summary summary2 = reply2.toCompletableFuture().get(3, SECONDS);
-    assertEquals(2, summary2.items.size());
-    assertEquals(5, summary2.items.get(item2).intValue());
+    assertEquals(2, summary2.getItems().size());
+    assertEquals(5, summary2.getItems().get(item2).intValue());
     // another cart
     CompletionStage<ShoppingCart.Summary> reply3 =
         cart2.askWithStatus(replyTo -> new ShoppingCart.AddItem(item2, 4, replyTo), timeout);
     ShoppingCart.Summary summary3 = reply3.toCompletableFuture().get(3, SECONDS);
-    assertEquals(1, summary3.items.size());
-    assertEquals(4L, summary3.items.get(item2).intValue());
+    assertEquals(1, summary3.getItems().size());
+    assertEquals(4L, summary3.getItems().get(item2).intValue());
 
     probe.awaitAssert(
         Duration.ofSeconds(10),
@@ -124,7 +124,7 @@ public class ItemPopularityIntegrationTest {
     // Given `item1` is already on the popularity projection DB...
     CompletionStage<ShoppingCart.Summary> rep1 =
         sharding
-            .entityRefFor(ShoppingCart.ENTITY_KEY, "concurrent-cart0")
+            .entityRefFor(ShoppingCart.getEntityKey(), "concurrent-cart0")
             .askWithStatus(replyTo -> new ShoppingCart.AddItem(item, itemCount, replyTo), timeout);
 
     TestProbe<Object> probe = testKit.createTestProbe();
@@ -139,7 +139,7 @@ public class ItemPopularityIntegrationTest {
     // ... when 29 concurrent carts add `item1`...
     for (int i = 1; i < cartCount; i++) {
       sharding
-          .entityRefFor(ShoppingCart.ENTITY_KEY, "concurrent-cart" + i)
+          .entityRefFor(ShoppingCart.getEntityKey(), "concurrent-cart" + i)
           .<ShoppingCart.Summary>askWithStatus(
               replyTo -> new ShoppingCart.AddItem(item, itemCount, replyTo), timeout);
     }
