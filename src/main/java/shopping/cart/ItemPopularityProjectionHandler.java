@@ -20,7 +20,7 @@ public final class ItemPopularityProjectionHandler
   }
 
   private ItemPopularity findOrNew(String itemId) {
-    return repo.findById(itemId).orElseGet(() -> new ItemPopularity(itemId, 0, 0));
+    return repo.findById(itemId).orElseGet(() -> new ItemPopularity(itemId, 0L, 0));
   }
 
   @Override
