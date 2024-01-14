@@ -9,7 +9,7 @@ import shopping.cart.repository.ItemPopularityRepository
 
 
 internal class ItemPopularityProjectionHandler(private val tag: String, private val repo: ItemPopularityRepository) :
-    JdbcHandler<EventEnvelope<ShoppingCart.Event>, HibernateJdbcSession?>() {
+    JdbcHandler<EventEnvelope<ShoppingCart.Event>, HibernateJdbcSession>() {
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
     private fun findOrNew(itemId: String): ItemPopularity {
