@@ -29,7 +29,7 @@ object Main {
     }
 
     @JvmStatic
-    fun init(system: ActorSystem<Void>, orderService: ShoppingOrderService?) {
+    fun init(system: ActorSystem<Void>, orderService: ShoppingOrderService) {
         AkkaManagement.get(system).start()
         ClusterBootstrap.get(system).start()
 
