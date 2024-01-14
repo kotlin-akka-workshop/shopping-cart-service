@@ -28,8 +28,7 @@ internal class PublishEventsProjectionHandler
         // using the cartId as the key and `DefaultPartitioner` will select partition based on the key
         // so that events for same cart always ends up in same partition
         val key = event.getCardId()
-        val producerRecord =
-            ProducerRecord(topic, key, serialize(event))
+        val producerRecord = ProducerRecord(topic, key, serialize(event))
         return sendProducer
             .send(producerRecord)
             .thenApply { recordMetadata: RecordMetadata ->

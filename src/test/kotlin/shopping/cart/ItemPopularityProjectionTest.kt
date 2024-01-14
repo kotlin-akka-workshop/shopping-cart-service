@@ -23,12 +23,12 @@ class ItemPopularityProjectionTest {
     internal class TestItemPopularityRepository : ItemPopularityRepository {
         val itemPops: MutableMap<String?, ItemPopularity?> = HashMap()
 
-        override fun save(itemPopularity: ItemPopularity?): ItemPopularity? {
-            itemPops[itemPopularity!!.itemId] = itemPopularity
+        override fun save(itemPopularity: ItemPopularity): ItemPopularity {
+            itemPops[itemPopularity.itemId] = itemPopularity
             return itemPopularity
         }
 
-        override fun findById(id: String?): Optional<ItemPopularity>? {
+        override fun findById(id: String): Optional<ItemPopularity> {
             return Optional.ofNullable(itemPops[id])
         }
     }

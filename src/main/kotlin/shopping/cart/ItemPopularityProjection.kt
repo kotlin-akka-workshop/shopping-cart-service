@@ -18,7 +18,6 @@ import java.util.*
 
 
 object ItemPopularityProjection {
-    @JvmStatic
     fun init(
         system: ActorSystem<*>,
         transactionManager: JpaTransactionManager,

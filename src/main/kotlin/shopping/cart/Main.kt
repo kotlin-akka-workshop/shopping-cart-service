@@ -28,7 +28,6 @@ object Main {
         }
     }
 
-    @JvmStatic
     fun init(system: ActorSystem<Void>, orderService: ShoppingOrderService) {
         AkkaManagement.get(system).start()
         ClusterBootstrap.get(system).start()
@@ -59,7 +58,7 @@ object Main {
         ShoppingCartServer.start(grpcInterface, grpcPort, system, grpcService)
     }
 
-    fun orderServiceClient(system: ActorSystem<*>): ShoppingOrderService {
+    private fun orderServiceClient(system: ActorSystem<*>): ShoppingOrderService {
         val orderServiceClientSettings =
             GrpcClientSettings.connectToServiceAt(
                 system.settings().config().getString("shopping-order-service.host"),

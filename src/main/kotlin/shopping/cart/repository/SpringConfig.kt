@@ -50,8 +50,8 @@ open class SpringConfig(private val config: Config) {
     }
 
     /**
-     * Returns a [DataSource] configured with the settings in `jdbc-connection-settings.driver`. See src/main/resources/persistence.conf and
-     * src/main/resources/local-shared.conf
+     * Returns a [DataSource] configured with the settings in `jdbc-connection-settings.driver`.
+     * See src/main/resources/persistence.conf and src/main/resources/local-shared.conf
      */
     @Bean
     open fun dataSource(): DataSource {
@@ -81,10 +81,11 @@ open class SpringConfig(private val config: Config) {
     }
 
     /**
-     * Additional JPA properties can be passed through config settings under `jdbc-connection-settings.additional-properties`. The properties must be defined as key/value
+     * Additional JPA properties can be passed through config settings under
+     * `jdbc-connection-settings.additional-properties`. The properties must be defined as key/value
      * pairs of String/String.
      */
-    fun additionalProperties(): Properties {
+    private fun additionalProperties(): Properties {
         val properties = Properties()
 
         val additionalProperties = jdbcConfig().getConfig("additional-properties")

@@ -466,9 +466,8 @@ private constructor(private val cartId: String, private val projectionTag: Strin
         @JvmStatic
         fun getEntityKey() = ENTITY_KEY
 
-        val TAGS: List<String> = Collections.unmodifiableList(
-            mutableListOf("carts-0", "carts-1", "carts-2", "carts-3", "carts-4")
-        )
+        //TODO what are tags ?
+        val TAGS: List<String> = listOf("carts-0", "carts-1", "carts-2", "carts-3", "carts-4")
 
         @JvmStatic
         fun init(system: ActorSystem<*>?) {

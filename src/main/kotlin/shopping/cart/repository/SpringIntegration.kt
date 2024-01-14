@@ -17,7 +17,6 @@ object SpringIntegration {
      * Returns a Spring [ApplicationContext] configured to provide all the infrastructure
      * necessary for working with Akka Projections.
      */
-    @JvmStatic
     fun applicationContext(system: ActorSystem<*>): ApplicationContext {
         val config = system.settings().config()
         val context = AnnotationConfigApplicationContext()

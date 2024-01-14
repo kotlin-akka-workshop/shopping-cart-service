@@ -30,7 +30,7 @@ class HibernateJdbcSession(private val transactionManager: JpaTransactionManager
         this
     )
 
-    fun entityManager(): EntityManager {
+    private fun entityManager(): EntityManager {
         return EntityManagerFactoryUtils.getTransactionalEntityManager(
             Objects.requireNonNull(transactionManager.entityManagerFactory)
         )!!
