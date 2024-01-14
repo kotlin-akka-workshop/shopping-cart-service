@@ -47,14 +47,14 @@
             <dependency>
                 <groupId>com.lightbend.akka</groupId>
                 <artifactId>akka-dependencies_${scala.binary.version}</artifactId>
-                <version>23.10.0</version>
+                <version>23.10.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework.data</groupId>
                 <artifactId>spring-data-bom</artifactId>
-                <version>2020.0.1</version>
+                <version>2021.0.12</version><!-- Akka does not support latest Spring persistence -->
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
@@ -137,7 +137,7 @@
         <dependency>
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
-            <version>5.4.13.Final</version>
+            <version>5.6.15.Final</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -227,7 +227,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.12.1</version>
                 <configuration>
-                    <release>11</release> <!-- TODO migrate to Java 17 -->
+                    <release>17</release>
                 </configuration>
             </plugin>
             <plugin>
