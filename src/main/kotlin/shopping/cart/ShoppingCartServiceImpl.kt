@@ -54,7 +54,7 @@ class ShoppingCartServiceImpl(system: ActorSystem<*>, repository: ItemPopularity
     override fun addItem(input: AddItemRequest): CompletionStage<Cart> {
         logger.info("addItem {} to cart {}", input.itemId, input.cartId)
         val entityRef =
-            sharding.entityRefFor(ShoppingCart.getEntityKey(), input.cartId)
+            sharding.entityRefFor(ShoppingCart.ENTITY_KEY, input.cartId)
         val reply =
             entityRef.askWithStatus(
                 { replyTo: ActorRef<StatusReply<ShoppingCart.Summary>> ->
@@ -77,7 +77,7 @@ class ShoppingCartServiceImpl(system: ActorSystem<*>, repository: ItemPopularity
     override fun updateItem(input: UpdateItemRequest): CompletionStage<Cart> {
         logger.info("getCart {}", input.cartId)
         val entityRef =
-            sharding.entityRefFor(ShoppingCart.getEntityKey(), input.cartId)
+            sharding.entityRefFor(ShoppingCart.ENTITY_KEY, input.cartId)
         val reply: CompletionStage<ShoppingCart.Summary> = if (input.quantity == 0) {
             entityRef.askWithStatus(
                 { replyTo: ActorRef<StatusReply<ShoppingCart.Summary>> ->
@@ -111,7 +111,7 @@ class ShoppingCartServiceImpl(system: ActorSystem<*>, repository: ItemPopularity
     override fun checkout(input: CheckoutRequest): CompletionStage<Cart> {
         logger.info("checkout {}", input.cartId)
         val entityRef =
-            sharding.entityRefFor(ShoppingCart.getEntityKey(), input.cartId)
+            sharding.entityRefFor(ShoppingCart.ENTITY_KEY, input.cartId)
         val reply =
             entityRef.askWithStatus({ replyTo: ActorRef<StatusReply<ShoppingCart.Summary>> ->
                 Checkout(
@@ -129,7 +129,7 @@ class ShoppingCartServiceImpl(system: ActorSystem<*>, repository: ItemPopularity
     override fun getCart(input: GetCartRequest): CompletionStage<Cart> {
         logger.info("getCart {}", input.cartId)
         val entityRef =
-            sharding.entityRefFor(ShoppingCart.getEntityKey(), input.cartId)
+            sharding.entityRefFor(ShoppingCart.ENTITY_KEY, input.cartId)
         val reply =
             entityRef.ask({ replyTo: ActorRef<ShoppingCart.Summary> ->
                 ShoppingCart.Get(
@@ -138,7 +138,7 @@ class ShoppingCartServiceImpl(system: ActorSystem<*>, repository: ItemPopularity
             }, timeout)
         val protoCart =
             reply.thenApply { cart: ShoppingCart.Summary ->
-                if (cart.getItems().isEmpty()) throw GrpcServiceException(
+                if (cart.items.isEmpty()) throw GrpcServiceException(
                     Status.NOT_FOUND.withDescription("Cart " + input.cartId + " not found")
                 )
                 else return@thenApply toProtoCart(cart)
@@ -163,7 +163,7 @@ class ShoppingCartServiceImpl(system: ActorSystem<*>, repository: ItemPopularity
     companion object {
         private fun toProtoCart(cart: ShoppingCart.Summary): Cart {
             val protoItems =
-                cart.getItems().entries.stream()
+                cart.items.entries.stream()
                     .map { entry: Map.Entry<String?, Int?> ->
                         Item.newBuilder()
                             .setItemId(entry.key)
@@ -172,7 +172,7 @@ class ShoppingCartServiceImpl(system: ActorSystem<*>, repository: ItemPopularity
                     }
                     .collect(Collectors.toList())
 
-            return Cart.newBuilder().setCheckedOut(cart.isCheckedOut()).addAllItems(protoItems).build()
+            return Cart.newBuilder().setCheckedOut(cart.checkedOut).addAllItems(protoItems).build()
         }
 
 

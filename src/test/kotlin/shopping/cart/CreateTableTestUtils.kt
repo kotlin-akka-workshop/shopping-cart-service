@@ -18,7 +18,6 @@ object CreateTableTestUtils {
      * Test utility to create journal and projection tables for tests environment. JPA/Hibernate
      * tables are auto created (drop-and-create) using settings flag, see persistence-test.conf
      */
-    @JvmStatic
     fun createTables(transactionManager: JpaTransactionManager?, system: ActorSystem<*>) {
         // create schemas
         // ok to block here, main test thread

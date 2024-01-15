@@ -18,7 +18,6 @@ import org.springframework.orm.jpa.JpaTransactionManager
 import shopping.cart.CreateTableTestUtils.createTables
 import shopping.cart.ItemPopularityProjection.init
 import shopping.cart.ShoppingCart.AddItem
-import shopping.cart.ShoppingCart.Companion.getEntityKey
 import shopping.cart.ShoppingCart.Companion.init
 import shopping.cart.repository.ItemPopularityRepository
 import shopping.cart.repository.SpringIntegration.applicationContext
@@ -37,8 +36,8 @@ class ItemPopularityIntegrationTest {
         val item1 = "item1"
         val item2 = "item2"
 
-        val cart1 = sharding.entityRefFor(getEntityKey(), cartId1)
-        val cart2 = sharding.entityRefFor(getEntityKey(), cartId2)
+        val cart1 = sharding.entityRefFor(ShoppingCart.ENTITY_KEY, cartId1)
+        val cart2 = sharding.entityRefFor(ShoppingCart.ENTITY_KEY, cartId2)
 
         val timeout = Duration.ofSeconds(3)
 
@@ -51,7 +50,7 @@ class ItemPopularityIntegrationTest {
                 )
             }, timeout)
         val summary1 = reply1.toCompletableFuture()[3, TimeUnit.SECONDS]
-        Assert.assertEquals(3, summary1.getItems()[item1]!!.toLong())
+        Assert.assertEquals(3, summary1.items[item1]!!.toLong())
 
         val probe = testKit().createTestProbe<Any>()
         probe.awaitAssert<Any?> {
@@ -71,8 +70,8 @@ class ItemPopularityIntegrationTest {
                 )
             }, timeout)
         val summary2 = reply2.toCompletableFuture()[3, TimeUnit.SECONDS]
-        Assert.assertEquals(2, summary2.getItems().size.toLong())
-        Assert.assertEquals(5, summary2.getItems()[item2]!!.toLong())
+        Assert.assertEquals(2, summary2.items.size.toLong())
+        Assert.assertEquals(5, summary2.items[item2]!!.toLong())
         // another cart
         val reply3 =
             cart2.askWithStatus({ replyTo: ActorRef<StatusReply<ShoppingCart.Summary>> ->
@@ -83,8 +82,8 @@ class ItemPopularityIntegrationTest {
                 )
             }, timeout)
         val summary3 = reply3.toCompletableFuture()[3, TimeUnit.SECONDS]
-        Assert.assertEquals(1, summary3.getItems().size.toLong())
-        Assert.assertEquals(4L, summary3.getItems()[item2]!!.toLong())
+        Assert.assertEquals(1, summary3.items.size.toLong())
+        Assert.assertEquals(4L, summary3.items[item2]!!.toLong())
 
         probe.awaitAssert<Any?>(
             Duration.ofSeconds(10)
@@ -110,7 +109,7 @@ class ItemPopularityIntegrationTest {
         // Given `item1` is already on the popularity projection DB...
         val rep1 =
             sharding
-                .entityRefFor(getEntityKey(), "concurrent-cart0")
+                .entityRefFor(ShoppingCart.ENTITY_KEY, "concurrent-cart0")
                 .askWithStatus({ replyTo: ActorRef<StatusReply<ShoppingCart.Summary>> ->
                     AddItem(
                         item,
@@ -131,7 +130,7 @@ class ItemPopularityIntegrationTest {
         // ... when 29 concurrent carts add `item1`...
         for (i in 1 until cartCount) {
             sharding
-                .entityRefFor(getEntityKey(), "concurrent-cart$i")
+                .entityRefFor(ShoppingCart.ENTITY_KEY, "concurrent-cart$i")
                 .askWithStatus(
                     { replyTo: ActorRef<StatusReply<ShoppingCart.Summary>> ->
                         AddItem(

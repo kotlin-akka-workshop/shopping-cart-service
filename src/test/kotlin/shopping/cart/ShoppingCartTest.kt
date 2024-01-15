@@ -38,9 +38,9 @@ class ShoppingCartTest {
             })
         Assert.assertTrue(result.reply().isSuccess)
         val summary = result.reply().value
-        Assert.assertFalse(summary.isCheckedOut())
-        Assert.assertEquals(1, summary.getItems().size.toLong())
-        Assert.assertEquals(42, summary.getItems()["foo"]!!.toLong())
+        Assert.assertFalse(summary.checkedOut)
+        Assert.assertEquals(1, summary.items.size.toLong())
+        Assert.assertEquals(42, summary.items["foo"]!!.toLong())
         Assert.assertEquals(ShoppingCart.ItemAdded(CART_ID, "foo", 42), result.event())
     }
 
@@ -109,7 +109,7 @@ class ShoppingCartTest {
                     )
                 })
         Assert.assertTrue(result2.reply().isSuccess)
-        Assert.assertEquals(43, result2.reply().value.getItems()["foo"]!!.toLong())
+        Assert.assertEquals(43, result2.reply().value.items["foo"]!!.toLong())
         Assert.assertEquals(ShoppingCart.ItemQuantityAdjusted(CART_ID, "foo", 42, 43), result2.event())
     }
 
@@ -132,7 +132,7 @@ class ShoppingCartTest {
         })
         Assert.assertTrue(result2.reply().isSuccess)
         Assert.assertTrue(result2.event() is ShoppingCart.CheckedOut)
-        Assert.assertEquals(CART_ID, result2.event().getCardId())
+        Assert.assertEquals(CART_ID, result2.event().cartId)
 
         val result3 =
             eventSourcedTestKit.runCommand({ replyTo: ActorRef<StatusReply<ShoppingCart.Summary>> ->
@@ -163,9 +163,9 @@ class ShoppingCartTest {
                 (replyTo)!!
             )
         })
-        Assert.assertFalse(result2.reply().isCheckedOut())
-        Assert.assertEquals(1, result2.reply().getItems().size.toLong())
-        Assert.assertEquals(42, result2.reply().getItems()["foo"]!!.toLong())
+        Assert.assertFalse(result2.reply().checkedOut)
+        Assert.assertEquals(1, result2.reply().items.size.toLong())
+        Assert.assertEquals(42, result2.reply().items["foo"]!!.toLong())
     }
 
 
@@ -188,9 +188,9 @@ class ShoppingCartTest {
                 (replyTo)!!
             )
         })
-        Assert.assertFalse(result2.reply().isCheckedOut())
-        Assert.assertEquals(1, result2.reply().getItems().size.toLong())
-        Assert.assertEquals(42, result2.reply().getItems()["foo"]!!.toLong())
+        Assert.assertFalse(result2.reply().checkedOut)
+        Assert.assertEquals(1, result2.reply().items.size.toLong())
+        Assert.assertEquals(42, result2.reply().items["foo"]!!.toLong())
     }
 
     companion object {

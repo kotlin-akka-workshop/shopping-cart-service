@@ -6,6 +6,7 @@ import akka.actor.typed.Behavior
 import akka.actor.typed.SupervisorStrategy
 import akka.actor.typed.javadsl.ActorContext
 import akka.actor.typed.javadsl.Behaviors
+import akka.cluster.sharding.typed.ShardingEnvelope
 import akka.cluster.sharding.typed.javadsl.ClusterSharding
 import akka.cluster.sharding.typed.javadsl.Entity
 import akka.cluster.sharding.typed.javadsl.EntityContext
@@ -21,7 +22,7 @@ import akka.persistence.typed.javadsl.RetentionCriteria
 import com.fasterxml.jackson.annotation.JsonCreator
 import java.time.Duration
 import java.time.Instant
-import java.util.*
+import java.util.Optional
 import kotlin.math.abs
 
 
@@ -51,10 +52,9 @@ private constructor(private val cartId: String, private val projectionTag: Strin
     ) {
     /** The current state held by the `EventSourcedBehavior`.  */
     class State @JvmOverloads constructor(
-        val items: MutableMap<String?, Int?> = HashMap(),
+        val items: MutableMap<String, Int> = HashMap(),
         private var checkoutDate: Optional<Instant> = Optional.empty()
-    ) :
-        CborSerializable {
+    ) : CborSerializable {
         val isCheckedOut: Boolean
             get() = checkoutDate.isPresent
 
@@ -67,11 +67,11 @@ private constructor(private val cartId: String, private val projectionTag: Strin
             return Summary(items, isCheckedOut)
         }
 
-        fun hasItem(itemId: String?): Boolean {
+        fun hasItem(itemId: String): Boolean {
             return items.containsKey(itemId)
         }
 
-        fun updateItem(itemId: String?, quantity: Int): State {
+        fun updateItem(itemId: String, quantity: Int): State {
             if (quantity == 0) {
                 items.remove(itemId)
             } else {
@@ -84,12 +84,12 @@ private constructor(private val cartId: String, private val projectionTag: Strin
             get() = items.isEmpty()
 
 
-        fun removeItem(itemId: String?): State {
+        fun removeItem(itemId: String): State {
             items.remove(itemId)
             return this
         }
 
-        fun itemCount(itemId: String?): Int {
+        fun itemCount(itemId: String): Int {
             return items[itemId]!!
         }
     }
@@ -105,120 +105,40 @@ private constructor(private val cartId: String, private val projectionTag: Strin
      * It replies with `StatusReply&lt;Summary&gt;`, which is sent back to the caller when all the
      * events emitted by this command are successfully persisted.
      */
-    class AddItem(val itemId: String, val quantity: Int, val replyTo: ActorRef<StatusReply<Summary>>) :
-        Command
+    data class AddItem(val itemId: String, val quantity: Int, val replyTo: ActorRef<StatusReply<Summary>>) : Command
 
     /** A command to remove an item from the cart.  */
-    class RemoveItem(val itemId: String, val replyTo: ActorRef<StatusReply<Summary>>) :
-        Command
+    data class RemoveItem(val itemId: String, val replyTo: ActorRef<StatusReply<Summary>>) : Command
 
     /** A command to adjust the quantity of an item in the cart.  */
-    class AdjustItemQuantity(val itemId: String, val quantity: Int, val replyTo: ActorRef<StatusReply<Summary>>) :
+    data class AdjustItemQuantity(val itemId: String, val quantity: Int, val replyTo: ActorRef<StatusReply<Summary>>) :
         Command
 
     /** A command to checkout the shopping cart.  */
-    class Checkout @JsonCreator constructor(val replyTo: ActorRef<StatusReply<Summary>>) :
-        Command
+    data class Checkout @JsonCreator constructor(val replyTo: ActorRef<StatusReply<Summary>>) : Command
 
     /** A command to get the current state of the shopping cart.  */
-    class Get @JsonCreator constructor(val replyTo: ActorRef<Summary>) : Command
+    data class Get @JsonCreator constructor(val replyTo: ActorRef<Summary>) : Command
 
     /** Summary of the shopping cart state, used in reply messages.  */
-    //TODO remove the getters
-    public class Summary(items: Map<String?, Int?>?, private val checkedOut: Boolean) : CborSerializable {
-        // defensive copy since items is a mutable object
-        private val items: Map<String?, Int?> = HashMap(items)
+    class Summary(val items: Map<String, Int>, val checkedOut: Boolean) : CborSerializable
 
-        fun getItems() = this.items
-
-        fun isCheckedOut() = checkedOut
+    interface Event : CborSerializable {
+        val cartId: String
     }
 
-    //TODO remove getter
-    abstract class Event(private val cartId: String) : CborSerializable {
-        fun getCardId() = cartId
-    }
+    internal data class ItemAdded(override val cartId: String, val itemId: String, val quantity: Int) : Event
 
-    internal class ItemAdded(cartId: String, val itemId: String, val quantity: Int) : Event(cartId) {
-        override fun equals(o: Any?): Boolean {
-            if (this === o) return true
-            if (o == null || javaClass != o.javaClass) return false
+    internal data class ItemRemoved(override val cartId: String, val itemId: String, val oldQuantity: Int) : Event
 
-            val other = o as ItemAdded
-
-            if (quantity != other.quantity) return false
-            if (getCardId() != other.getCardId()) return false
-            return itemId == other.itemId
-        }
-
-        override fun hashCode(): Int {
-            var result = getCardId().hashCode()
-            result = 31 * result + itemId.hashCode()
-            result = 31 * result + quantity
-            return result
-        }
-    }
-
-    internal class ItemRemoved(cartId: String, val itemId: String, val oldQuantity: Int) : Event(cartId) {
-        override fun equals(o: Any?): Boolean {
-            if (this === o) return true
-            if (o == null || javaClass != o.javaClass) return false
-
-            val other = o as ItemRemoved
-
-            if (oldQuantity != other.oldQuantity) return false
-            if (getCardId() != other.getCardId()) return false
-            return itemId == other.itemId
-        }
-
-        override fun hashCode(): Int {
-            var result = getCardId().hashCode()
-            result = 31 * result + itemId.hashCode()
-            result = 31 * result + oldQuantity
-            return result
-        }
-    }
-
-    internal class ItemQuantityAdjusted(
-        cartId: String,
+    internal data class ItemQuantityAdjusted(
+        override val cartId: String,
         val itemId: String,
         val oldQuantity: Int,
         val newQuantity: Int
-    ) :
-        Event(cartId) {
-        override fun equals(o: Any?): Boolean {
-            if (this === o) return true
-            if (o == null || javaClass != o.javaClass) return false
+    ) : Event
 
-            val other = o as ItemQuantityAdjusted
-
-            if (oldQuantity != other.oldQuantity) return false
-            if (newQuantity != other.newQuantity) return false
-            if (getCardId() != other.getCardId()) return false
-            return itemId == other.itemId
-        }
-
-        override fun hashCode(): Int {
-            var result = getCardId().hashCode()
-            result = 31 * result + itemId.hashCode()
-            result = 31 * result + oldQuantity
-            result = 31 * result + newQuantity
-            return result
-        }
-    }
-
-    internal class CheckedOut(cartId: String, val eventTime: Instant) : Event(cartId) {
-        override fun equals(o: Any?): Boolean {
-            if (this === o) return true
-            if (o == null || javaClass != o.javaClass) return false
-            val that = o as CheckedOut
-            return eventTime == that.eventTime
-        }
-
-        override fun hashCode(): Int {
-            return Objects.hash(eventTime)
-        }
-    }
+    internal data class CheckedOut(override val cartId: String, val eventTime: Instant) : Event
 
     override fun tagsFor(event: Event): Set<String> {
         return setOf(projectionTag)
@@ -458,45 +378,33 @@ private constructor(private val cartId: String, private val projectionTag: Strin
 
     companion object {
 
-         private val ENTITY_KEY: EntityTypeKey<Command> = EntityTypeKey.create(
-            Command::class.java, "ShoppingCart"
-        )
-
-        //TODO remove this function and expose the above val
-        @JvmStatic
-        fun getEntityKey() = ENTITY_KEY
+        val ENTITY_KEY: EntityTypeKey<Command> = EntityTypeKey.create(Command::class.java, "ShoppingCart")
 
         //TODO what are tags ?
         val TAGS: List<String> = listOf("carts-0", "carts-1", "carts-2", "carts-3", "carts-4")
 
-        @JvmStatic
-        fun init(system: ActorSystem<*>?) {
-            ClusterSharding.get(system)
-                .init(
-                    Entity.of(
-                        ENTITY_KEY,
-                        { entityContext: EntityContext<Command?> ->
-                            val i: Int =
-                                abs(
-                                    (entityContext.getEntityId().hashCode() % TAGS.size).toDouble()
-                                )
-                                    .toInt()
-                            val selectedTag: String = TAGS.get(i)
-                            create(entityContext.getEntityId(), selectedTag)
-                        })
+        fun init(system: ActorSystem<*>?): ActorRef<ShardingEnvelope<Command>> = ClusterSharding.get(system)
+            .init(
+                Entity.of(
+                    ENTITY_KEY,
+                    { entityContext: EntityContext<Command?> ->
+                        val i: Int =
+                            abs(
+                                (entityContext.entityId.hashCode() % TAGS.size).toDouble()
+                            )
+                                .toInt()
+                        val selectedTag: String = TAGS.get(i)
+                        create(entityContext.entityId, selectedTag)
+                    })
+            )
+
+
+        fun create(cartId: String, projectionTag: String): Behavior<Command?> = Behaviors.setup(
+            { ctx: ActorContext<Command?>? ->
+                start(
+                    ShoppingCart(cartId, projectionTag),
+                    ctx
                 )
-        }
-
-
-        @JvmStatic
-        fun create(cartId: String, projectionTag: String): Behavior<Command?> {
-            return Behaviors.setup(
-                { ctx: ActorContext<Command?>? ->
-                    start(
-                        ShoppingCart(cartId, projectionTag),
-                        ctx
-                    )
-                })
-        }
+            })
     }
 }

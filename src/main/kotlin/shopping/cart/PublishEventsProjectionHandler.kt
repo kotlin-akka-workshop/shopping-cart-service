@@ -27,7 +27,7 @@ internal class PublishEventsProjectionHandler
 
         // using the cartId as the key and `DefaultPartitioner` will select partition based on the key
         // so that events for same cart always ends up in same partition
-        val key = event.getCardId()
+        val key = event.cartId
         val producerRecord = ProducerRecord(topic, key, serialize(event))
         return sendProducer
             .send(producerRecord)
@@ -50,7 +50,7 @@ internal class PublishEventsProjectionHandler
                 val itemAdded = event
                 protoMessage =
                     ItemAdded.newBuilder()
-                        .setCartId(itemAdded.getCardId())
+                        .setCartId(itemAdded.cartId)
                         .setItemId(itemAdded.itemId)
                         .setQuantity(itemAdded.quantity)
                         .build()
@@ -61,7 +61,7 @@ internal class PublishEventsProjectionHandler
                     event
                 protoMessage =
                     ItemQuantityAdjusted.newBuilder()
-                        .setCartId(itemQuantityAdjusted.getCardId())
+                        .setCartId(itemQuantityAdjusted.cartId)
                         .setItemId(itemQuantityAdjusted.itemId)
                         .setQuantity(itemQuantityAdjusted.newQuantity)
                         .build()
@@ -71,7 +71,7 @@ internal class PublishEventsProjectionHandler
                 val itemRemoved = event
                 protoMessage =
                     ItemRemoved.newBuilder()
-                        .setCartId(itemRemoved.getCardId())
+                        .setCartId(itemRemoved.cartId)
                         .setItemId(itemRemoved.itemId)
                         .build()
                         .toByteString()
@@ -79,7 +79,7 @@ internal class PublishEventsProjectionHandler
             } else if (event is ShoppingCart.CheckedOut) {
                 protoMessage =
                     CheckedOut.newBuilder()
-                        .setCartId(event.getCardId())
+                        .setCartId(event.cartId)
                         .build()
                         .toByteString()
                 fullName = CheckedOut.getDescriptor().fullName

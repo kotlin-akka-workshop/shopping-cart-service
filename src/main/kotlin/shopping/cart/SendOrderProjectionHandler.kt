@@ -34,7 +34,7 @@ internal class SendOrderProjectionHandler(system: ActorSystem<*>, private val or
 
     private fun sendOrder(checkout: ShoppingCart.CheckedOut): CompletionStage<Done> {
         val entityRef =
-            sharding.entityRefFor(ShoppingCart.getEntityKey(), checkout.getCardId())
+            sharding.entityRefFor(ShoppingCart.ENTITY_KEY, checkout.cartId)
         val reply =
             entityRef.ask({ replyTo: ActorRef<ShoppingCart.Summary> ->
                 ShoppingCart.Get(
@@ -43,7 +43,7 @@ internal class SendOrderProjectionHandler(system: ActorSystem<*>, private val or
             }, timeout)
         return reply.thenCompose { cart: ShoppingCart.Summary ->
             val protoItems =
-                cart.getItems().entries.stream()
+                cart.items.entries.stream()
                     .map { entry: Map.Entry<String?, Int?> ->
                         Item.newBuilder()
                             .setItemId(entry.key)
@@ -51,9 +51,9 @@ internal class SendOrderProjectionHandler(system: ActorSystem<*>, private val or
                             .build()
                     }
                     .collect(Collectors.toList())
-            log.info("Sending order of {} items for cart {}.", cart.getItems().size, checkout.getCardId())
+            log.info("Sending order of {} items for cart {}.", cart.items.size, checkout.cartId)
             val orderRequest =
-                OrderRequest.newBuilder().setCartId(checkout.getCardId()).addAllItems(protoItems).build()
+                OrderRequest.newBuilder().setCartId(checkout.cartId).addAllItems(protoItems).build()
             orderService.order(orderRequest)
                 .thenApply { response: OrderResponse? -> Done.done() }
         }
