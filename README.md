@@ -1,16 +1,10 @@
 ## Running the sample code
 
-1. Start a local PostgresSQL server on default port 5432 and a Kafka broker on port 9092. The included `docker-compose.yml` starts everything required for running locally.
+1. Start a local PostgresSQL server on default port 5432 and a Kafka broker on port 9092. 
+The included `docker-compose.yml` starts everything required for running locally.
 
     ```shell
-    docker-compose up -d
-
-    # creates the tables needed for Akka Persistence
-    # as well as the offset store table for Akka Projection
-    docker exec -i shopping-cart-service-postgres-db-1 psql -U shopping-cart -t < ddl-scripts/create_tables.sql
-    
-    # creates the user defined projection table.
-    docker exec -i shopping-cart-service-postgres-db-1 psql -U shopping-cart -t < ddl-scripts/create_user_tables.sql
+    docker compose up -d
     ```
 
 2. Make sure you have compiled the project
