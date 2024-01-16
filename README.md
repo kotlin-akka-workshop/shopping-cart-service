@@ -1,3 +1,23 @@
+# Akka
+
+This is translation from Java to Kotlin for the marvelous tutorial from Lightbend:
+
+[Implementing Microservices with Akka](https://developer.lightbend.com/docs/akka-guide/microservices-tutorial/overview.html)
+
+## Changes to the original Java code
+
+[The original code](https://developer.lightbend.com/docs/akka-guide/microservices-tutorial/_attachments/6-shopping-cart-complete-java.zip)
+
+- Migrate code from Java to Kotlin 1.9
+- Simplify starting docker compose - no need to init the DB (it is done automatically)
+- No need to install Maven (the wrapper is used)
+- Upgraded version of Spring
+- Upgraded version of some Maven plugins
+
+***In progress***:
+*The work is started to launch the whole cluster locally with docker compose instead of 
+manually starting every service 3 times with different parameters.*
+
 ## Running the sample code
 
 1. Start a local PostgresSQL server on default port 5432 and a Kafka broker on port 9092. 
