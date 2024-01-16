@@ -45,4 +45,11 @@ services:
       - zookeeper
       - kafka
     volumes:
-      - ./ddl-scripts:/docker-entrypoint-initdb.d/
+      - ./kafka-1-logs:/tmp/kafka-logs
+
+  wait-for-kafka:
+    image: waisbrot/wait
+    links:
+      - kafka
+    environment:
+      - TARGETS=kafka:9092
